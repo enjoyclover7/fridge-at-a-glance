@@ -3,16 +3,18 @@
   "short_name": "냉장고",
   "description": "남은 음식의 소비기한을 관리하고 보유 재료로 메뉴를 추천하는 오프라인 앱",
   "lang": "ko-KR",
-  "start_url": "./",
-  "scope": "./",
+  "id": "/fridge-at-a-glance/",
+  "start_url": "/fridge-at-a-glance/",
+  "scope": "/fridge-at-a-glance/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#f5f8f6",
   "theme_color": "#274c3a",
   "categories": ["food", "lifestyle", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
-    {"src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-    {"src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+    {"src": "/fridge-at-a-glance/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/fridge-at-a-glance/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "/fridge-at-a-glance/assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
   ]
 }

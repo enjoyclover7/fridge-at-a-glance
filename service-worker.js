@@ -1,5 +1,6 @@
-const CACHE_NAME='fridge-pwa-v2';
-const APP_SHELL=['./','./index.html','./styles.css','./recipes.js','./app.js','./manifest.webmanifest','./assets/hero-fridge-balanced.webp','./assets/icons/icon-192.png','./assets/icons/icon-512.png','./assets/icons/icon-maskable-512.png','./assets/icons/apple-touch-icon.png'];
+const CACHE_NAME='fridge-pwa-v3';
+const BASE_PATH='/fridge-at-a-glance/';
+const APP_SHELL=[BASE_PATH,`${BASE_PATH}index.html`,`${BASE_PATH}styles.css`,`${BASE_PATH}recipes.js`,`${BASE_PATH}app.js`,`${BASE_PATH}manifest.webmanifest`,`${BASE_PATH}assets/hero-fridge-balanced.webp`,`${BASE_PATH}assets/icons/icon-192.png`,`${BASE_PATH}assets/icons/icon-512.png`,`${BASE_PATH}assets/icons/icon-maskable-512.png`,`${BASE_PATH}assets/icons/apple-touch-icon.png`];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()));
@@ -14,7 +15,7 @@ self.addEventListener('fetch',event=>{
   event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{
     if(response&&response.ok){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy));}
     return response;
-  }).catch(()=>event.request.mode==='navigate'?caches.match('./index.html'):Response.error())));
+  }).catch(()=>event.request.mode==='navigate'?caches.match(`${BASE_PATH}index.html`):Response.error())));
 });
 
 self.addEventListener('message',event=>{

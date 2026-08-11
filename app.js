@@ -96,16 +96,17 @@ $('#today').textContent=new Intl.DateTimeFormat('ko-KR',{month:'long',day:'numer
 async function enableOfflineMode(){
   if(!('serviceWorker'in navigator))return;
   try{
-    const registration=await navigator.serviceWorker.register('./service-worker.js');
+    const basePath='/fridge-at-a-glance/';
+    const registration=await navigator.serviceWorker.register(`${basePath}service-worker.js`,{scope:basePath});
     if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});
     await navigator.serviceWorker.ready;
     const assetUrls=[
-      './','./index.html','./styles.css','./recipes.js','./app.js','./manifest.webmanifest','./service-worker.js',
-      './assets/hero-fridge-balanced.webp','./assets/icons/icon-192.png','./assets/icons/icon-512.png','./assets/icons/icon-maskable-512.png','./assets/icons/apple-touch-icon.png',
-      ...foodImageCatalog.map(item=>`./assets/food/${item.file}.webp`),
-      ...recipes.map(item=>`./assets/recipes/${item.image}.webp`)
+      basePath,`${basePath}index.html`,`${basePath}styles.css`,`${basePath}recipes.js`,`${basePath}app.js`,`${basePath}manifest.webmanifest`,`${basePath}service-worker.js`,
+      `${basePath}assets/hero-fridge-balanced.webp`,`${basePath}assets/icons/icon-192.png`,`${basePath}assets/icons/icon-512.png`,`${basePath}assets/icons/icon-maskable-512.png`,`${basePath}assets/icons/apple-touch-icon.png`,
+      ...foodImageCatalog.map(item=>`${basePath}assets/food/${item.file}.webp`),
+      ...recipes.map(item=>`${basePath}assets/recipes/${item.image}.webp`)
     ];
-    const cache=await caches.open('fridge-pwa-v2');
+    const cache=await caches.open('fridge-pwa-v3');
     const results=await Promise.allSettled(assetUrls.map(url=>cache.add(url)));
     const failed=results.filter(result=>result.status==='rejected');
     if(failed.length)console.warn(`오프라인 파일 ${failed.length}개를 저장하지 못했습니다.`,failed);
