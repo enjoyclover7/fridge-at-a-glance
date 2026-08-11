@@ -1,0 +1,20 @@
+냉장고 한눈에 사용방법 (PC·모바일 공용 PWA)
+
+일반 실행
+1. 냉장고_한눈에 폴더의 index.html을 더블클릭합니다.
+2. Chrome 또는 Edge에서 기본 기능을 사용할 수 있습니다.
+
+앱 설치 및 완전한 오프라인 사용
+1. 터미널에서 냉장고_한눈에 폴더로 이동합니다.
+2. Python이 설치되어 있다면 다음 명령을 실행합니다.
+   python -m http.server 8080
+3. PC에서는 http://localhost:8080 을 엽니다.
+4. 모바일에서는 PC와 같은 네트워크에서 PC의 IP 주소와 8080 포트로 접속합니다.
+5. Chrome 또는 Edge의 '앱 설치', iPhone Safari의 '홈 화면에 추가'를 선택합니다.
+6. 첫 화면을 한 번 완전히 불러오면 식재료와 레시피 이미지가 오프라인 캐시에 저장됩니다.
+
+주의사항
+- PWA 설치와 서비스 워커는 브라우저 보안 정책상 localhost 또는 HTTPS 환경에서만 활성화됩니다.
+- 음식 정보는 설치한 앱 또는 접속한 브라우저의 로컬 저장소에 보관됩니다.
+- 브라우저의 사이트 데이터나 앱 데이터를 삭제하면 등록한 음식 정보도 삭제될 수 있습니다.
+- index.html, styles.css, recipes.js, app.js, service-worker.js, manifest.webmanifest, assets 폴더를 함께 유지해야 합니다.

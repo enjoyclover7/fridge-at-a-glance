@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#274c3a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="냉장고">
+  <meta name="description" content="남은 음식의 소비기한을 관리하고 보유 재료로 메뉴를 추천하는 오프라인 앱">
+  <title>냉장고 한눈에</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="냉장고 한눈에 처음으로">
+        <span class="leaf-logo" aria-hidden="true"><i></i></span>
+        <span>냉장고 한눈에</span>
+      </a>
+      <div class="date-pill"><span class="status-light"></span><span id="today"></span></div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy-wrap">
+          <p class="kicker">FRESH FRIDGE</p>
+          <h1 id="hero-title">남은 음식,<br><span>잊기 전에.</span></h1>
+          <p class="hero-copy">유통기한이 가까운 음식부터 확인하고<br>오늘 만들 수 있는 메뉴를 골라보세요.</p>
+          <div class="hero-stats" aria-label="냉장고 요약 및 음식 필터">
+            <button class="stat-tab active" type="button" data-stat-filter="all" aria-pressed="true"><span class="stat-icon leaf">♧</span><span class="stat-copy"><strong id="total-count">0</strong><small>보관 중</small></span></button>
+            <button class="stat-tab" type="button" data-stat-filter="urgent" aria-pressed="false"><span class="stat-icon clock">◷</span><span class="stat-copy"><strong id="urgent-count">0</strong><small>곧 소비</small></span></button>
+            <button class="stat-tab" type="button" data-stat-filter="safe" aria-pressed="false"><span class="stat-icon sprout">⌁</span><span class="stat-copy"><strong id="safe-count">0</strong><small>신선함</small></span></button>
+            <button class="stat-tab" type="button" data-stat-target="recipes"><span class="stat-icon star">☆</span><span class="stat-copy"><strong id="recipe-count">0</strong><small>추천 메뉴</small></span></button>
+          </div>
+        </div>
+        <div class="hero-photo" role="img" aria-label="신선한 채소와 식재료가 정돈된 냉장고">
+          <div class="photo-fallback"><span>🥬</span><span>🥛</span><span>🥒</span><span>🥚</span></div>
+          <div class="fresh-badge"><span>✓</span><div><strong>오늘도 신선하게</strong><small>냉장고 상태 좋아요</small></div></div>
+        </div>
+      </section>
+
+      <section class="quick-add" aria-labelledby="add-title">
+        <div class="add-title"><span class="round-icon">＋</span><div><h2 id="add-title">음식 등록</h2><p>이름과 날짜만 입력하세요</p></div></div>
+        <form id="food-form" class="add-form">
+          <label><span>음식 이름</span><input id="food-name" type="text" maxlength="30" placeholder="예: 우유" required autocomplete="off"></label>
+          <label><span>유통기한</span><input id="expiry-date" type="date" required></label>
+          <button class="primary-btn" type="submit">추가하기 <span aria-hidden="true">→</span></button>
+        </form>
+        <div id="recent-wrap" class="recent-wrap" hidden><span>최근 등록</span><div id="recent-items" class="chips"></div></div>
+      </section>
+
+      <section class="dashboard">
+        <div id="inventory" class="inventory-panel">
+          <div class="section-head">
+            <div><p class="kicker">IN MY FRIDGE</p><h2>남은 음식</h2></div>
+            <div class="tools">
+              <label class="search"><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="음식 검색" aria-label="음식 검색"></label>
+              <div class="filters" role="group" aria-label="기한 필터">
+                <button class="filter active" data-filter="all">전체</button>
+                <button class="filter" data-filter="urgent">임박</button>
+                <button class="filter" data-filter="safe">여유</button>
+              </div>
+            </div>
+          </div>
+          <div id="food-list" class="food-list"></div>
+          <div id="empty-state" class="empty-state" hidden><span>♧</span><h3>냉장고가 비어 있어요</h3><p>위에서 첫 음식을 등록해보세요.</p></div>
+        </div>
+
+        <aside id="recipes" class="recipe-panel" aria-labelledby="recipe-title">
+          <div class="section-head">
+            <div><p class="kicker">TODAY'S MENU</p><h2 id="recipe-title">오늘 뭐 먹지?</h2></div>
+            <span class="recommend-note">임박 재료 우선</span>
+          </div>
+          <p class="recipe-intro">바로 만들 수 있는 메뉴와 재료 하나만 더 있으면 되는 메뉴를 추천해요.</p>
+          <div id="menu-list" class="menu-list"></div>
+        </aside>
+      </section>
+    </main>
+
+    <footer><div class="brand mini"><span class="leaf-logo" aria-hidden="true"><i></i></span><span>냉장고 한눈에</span></div><p>모든 데이터는 이 브라우저에만 안전하게 저장됩니다.</p></footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="recipes.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
