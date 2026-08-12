@@ -21,7 +21,10 @@
         <span class="leaf-logo" aria-hidden="true"><i></i></span>
         <span>냉장고 한눈에</span>
       </a>
-      <div class="date-pill"><span class="status-light"></span><span id="today"></span></div>
+      <div class="top-actions">
+        <div class="date-pill"><span class="status-light"></span><span id="today"></span></div>
+        <button id="open-add" class="header-add" type="button" aria-haspopup="dialog" aria-controls="add-dialog" aria-label="음식 등록 열기">＋</button>
+      </div>
     </header>
 
     <main id="top">
@@ -43,16 +46,6 @@
         </div>
       </section>
 
-      <section class="quick-add" aria-labelledby="add-title">
-        <div class="add-title"><span class="round-icon">＋</span><div><h2 id="add-title">음식 등록</h2><p>이름과 날짜만 입력하세요</p></div></div>
-        <form id="food-form" class="add-form">
-          <label><span>음식 이름</span><input id="food-name" type="text" maxlength="30" placeholder="예: 우유" required autocomplete="off"></label>
-          <label><span>유통기한</span><input id="expiry-date" type="date" required></label>
-          <button class="primary-btn" type="submit">추가하기 <span aria-hidden="true">→</span></button>
-        </form>
-        <div id="recent-wrap" class="recent-wrap" hidden><span>최근 등록</span><div id="recent-items" class="chips"></div></div>
-      </section>
-
       <section class="dashboard">
         <div id="inventory" class="inventory-panel">
           <div class="section-head">
@@ -67,7 +60,7 @@
             </div>
           </div>
           <div id="food-list" class="food-list"></div>
-          <div id="empty-state" class="empty-state" hidden><span>♧</span><h3>냉장고가 비어 있어요</h3><p>위에서 첫 음식을 등록해보세요.</p></div>
+          <div id="empty-state" class="empty-state" hidden><span>♧</span><h3>냉장고가 비어 있어요</h3><p>첫 음식을 등록하면 소비기한과 메뉴를 챙겨드릴게요.</p><button class="empty-add primary-btn" type="button" data-open-add>첫 음식 등록하기</button></div>
         </div>
 
         <aside id="recipes" class="recipe-panel" aria-labelledby="recipe-title">
@@ -83,8 +76,50 @@
 
     <footer><div class="brand mini"><span class="leaf-logo" aria-hidden="true"><i></i></span><span>냉장고 한눈에</span></div><p>모든 데이터는 이 브라우저에만 안전하게 저장됩니다.</p></footer>
   </div>
+  <dialog id="add-dialog" class="sheet" aria-labelledby="add-title">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <header class="sheet-head">
+      <div><p class="kicker">ADD FOOD</p><h2 id="add-title">음식 등록</h2></div>
+      <button class="icon-close" type="button" data-close-dialog aria-label="음식 등록 닫기">×</button>
+    </header>
+    <div class="add-methods" role="tablist" aria-label="등록 방법">
+      <button id="manual-tab" class="method-tab active" type="button" role="tab" aria-selected="true" aria-controls="manual-panel">직접 등록</button>
+      <button id="receipt-tab" class="method-tab" type="button" role="tab" aria-selected="false" aria-controls="receipt-panel">영수증으로 가져오기</button>
+    </div>
+    <section id="manual-panel" class="method-panel" role="tabpanel" aria-labelledby="manual-tab">
+      <form id="food-form" class="add-form sheet-form">
+        <label><span>음식 이름</span><input id="food-name" type="text" maxlength="30" placeholder="예: 우유" required autocomplete="off"></label>
+        <label><span>소비기한</span><input id="expiry-date" type="date" required></label>
+        <button class="primary-btn" type="submit">냉장고에 추가</button>
+      </form>
+      <div id="recent-wrap" class="recent-wrap" hidden><span>최근 등록</span><div id="recent-items" class="chips"></div></div>
+    </section>
+    <section id="receipt-panel" class="method-panel" role="tabpanel" aria-labelledby="receipt-tab" hidden>
+      <div id="receipt-upload" class="receipt-upload">
+        <span class="receipt-icon" aria-hidden="true">▤</span>
+        <h3>영수증 사진을 올려주세요</h3>
+        <p>사진은 기기 안에서만 분석되며 서버로 전송하지 않습니다.</p>
+        <label class="upload-btn">사진 촬영 또는 선택<input id="receipt-file" type="file" accept="image/*" capture="environment"></label>
+        <p class="network-note">처음 인식할 때 OCR 언어 파일을 내려받기 위해 인터넷이 필요합니다.</p>
+      </div>
+      <div id="receipt-progress" class="receipt-progress" hidden aria-live="polite">
+        <div class="spinner" aria-hidden="true"></div><strong id="ocr-status">영수증을 준비하고 있어요</strong>
+        <progress id="ocr-progress" max="100" value="0"></progress><button id="cancel-ocr" class="text-btn" type="button">취소</button>
+      </div>
+      <div id="receipt-review" class="receipt-review" hidden>
+        <div class="review-head"><div><h3>등록할 음식을 확인하세요</h3><p>상품명과 수량을 수정하고 소비기한을 입력해 주세요.</p></div><button id="retry-receipt" class="text-btn" type="button">다른 사진</button></div>
+        <div class="bulk-date"><label for="bulk-expiry">모든 선택 항목에 소비기한 적용</label><div><input id="bulk-expiry" type="date"><button id="apply-bulk-date" type="button">적용</button></div></div>
+        <div id="receipt-items" class="receipt-items"></div>
+        <details class="ocr-raw"><summary>인식된 원문 확인</summary><pre id="ocr-raw-text"></pre></details>
+        <button id="save-receipt-items" class="primary-btn review-save" type="button">선택한 음식 저장</button>
+      </div>
+      <div id="receipt-error" class="receipt-error" hidden role="alert"><strong>음식을 찾지 못했어요.</strong><p id="receipt-error-message">더 밝고 반듯하게 찍은 사진으로 다시 시도해 주세요.</p><button id="retry-error" class="secondary-btn" type="button">다시 시도</button></div>
+    </section>
+  </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js" defer></script>
   <script src="recipes.js"></script>
   <script src="app.js"></script>
+  <script src="receipt.js"></script>
 </body>
 </html>

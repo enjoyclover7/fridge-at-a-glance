@@ -59,6 +59,11 @@ function possibleMenus(){
   }).filter(Boolean).sort((a,b)=>Number(b.ready)-Number(a.ready)||b.matchRatio-a.matchRatio||a.priority-b.priority||a.time-b.time);
 }
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(foods));render()}
+function addFoods(items){
+  const valid=items.filter(item=>item.name&&item.expiry).map(item=>({id:makeId(),name:item.name.trim(),expiry:item.expiry,quantity:Math.max(1,Number(item.quantity)||1)}));
+  if(!valid.length)return 0;
+  foods.push(...valid);valid.forEach(item=>updateHistory(item.name,item.expiry));save();return valid.length;
+}
 function render(){
   const sorted=[...foods].sort((a,b)=>daysLeft(a.expiry)-daysLeft(b.expiry));
   const visible=sorted.filter(item=>{const key=statusFor(daysLeft(item.expiry)).key;const matchFilter=filter==='all'||(filter==='urgent'&&(key==='urgent'||key==='expired'))||(filter==='safe'&&(key==='safe'||key==='warning'));return matchFilter&&item.name.toLowerCase().includes(search.toLowerCase())});
@@ -70,7 +75,7 @@ function renderMenus(){const menus=possibleMenus().slice(0,6);$('#menu-list').in
 function updateHistory(name,expiry){let history=[];try{history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch{}history=history.filter(x=>normalize(x.name)!==normalize(name));history.unshift({name,shelfDays:Math.max(1,daysLeft(expiry))});localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(0,8)))}
 function renderHistory(){let history=[];try{history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch{}$('#recent-wrap').hidden=!history.length;$('#recent-items').innerHTML=history.map((x,i)=>`<button class="chip" data-history="${i}">${escapeHtml(x.name)}</button>`).join('')}
 function toast(message){const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),1800)}
-$('#food-form').addEventListener('submit',event=>{event.preventDefault();const name=$('#food-name').value.trim(),expiry=$('#expiry-date').value;if(!name||!expiry)return;foods.push({id:makeId(),name,expiry,quantity:1});updateHistory(name,expiry);save();event.target.reset();setDefaultDate();toast(`${name}을(를) 냉장고에 넣었어요.`)});
+$('#food-form').addEventListener('submit',event=>{event.preventDefault();const name=$('#food-name').value.trim(),expiry=$('#expiry-date').value;if(!name||!expiry)return;addFoods([{name,expiry,quantity:1}]);event.target.reset();setDefaultDate();$('#add-dialog').close();toast(`${name}을(를) 냉장고에 넣었어요.`)});
 foodList.addEventListener('click',event=>{const button=event.target.closest('button[data-action]');if(!button)return;const item=foods.find(x=>x.id===button.dataset.id);if(!item)return;if(button.dataset.action==='plus')item.quantity++;if(button.dataset.action==='minus')item.quantity=Math.max(1,item.quantity-1);if(button.dataset.action==='done'){foods=foods.filter(x=>x.id!==item.id);toast(`${item.name} 사용을 완료했어요.`)}save()});
 $('#recent-items').addEventListener('click',event=>{const button=event.target.closest('[data-history]');if(!button)return;const history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'),item=history[Number(button.dataset.history)];if(!item)return;const date=new Date();date.setDate(date.getDate()+item.shelfDays);$('#food-name').value=item.name;$('#expiry-date').value=dateKey(date);$('#food-name').focus()});
 $('#search-input').addEventListener('input',e=>{search=e.target.value;render()});
@@ -93,6 +98,16 @@ document.querySelector('[data-stat-target="recipes"]').addEventListener('click',
 function setDefaultDate(){const d=new Date();d.setDate(d.getDate()+7);$('#expiry-date').value=dateKey(d)}
 $('#today').textContent=new Intl.DateTimeFormat('ko-KR',{month:'long',day:'numeric',weekday:'short'}).format(new Date());setDefaultDate();render();
 
+const addDialog=$('#add-dialog');
+function openAddDialog(){if(!addDialog.open)addDialog.showModal();document.body.classList.add('modal-open');setTimeout(()=>$('#food-name').focus(),80)}
+function closeAddDialog(){if(addDialog.open)addDialog.close()}
+$('#open-add').addEventListener('click',openAddDialog);
+document.querySelectorAll('[data-open-add]').forEach(button=>button.addEventListener('click',openAddDialog));
+document.querySelectorAll('[data-close-dialog]').forEach(button=>button.addEventListener('click',closeAddDialog));
+addDialog.addEventListener('click',event=>{if(event.target===addDialog)closeAddDialog()});
+addDialog.addEventListener('close',()=>document.body.classList.remove('modal-open'));
+window.fridgeApp={addFoods,toast,closeAddDialog,dateKey,offset};
+
 async function enableOfflineMode(){
   if(!('serviceWorker'in navigator))return;
   try{
@@ -101,12 +116,12 @@ async function enableOfflineMode(){
     if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});
     await navigator.serviceWorker.ready;
     const assetUrls=[
-      basePath,`${basePath}index.html`,`${basePath}styles.css`,`${basePath}recipes.js`,`${basePath}app.js`,`${basePath}manifest.webmanifest`,`${basePath}service-worker.js`,
+      basePath,`${basePath}index.html`,`${basePath}styles.css`,`${basePath}recipes.js`,`${basePath}app.js`,`${basePath}receipt.js`,`${basePath}manifest.webmanifest`,`${basePath}service-worker.js`,
       `${basePath}assets/hero-fridge-balanced.webp`,`${basePath}assets/icons/icon-192.png`,`${basePath}assets/icons/icon-512.png`,`${basePath}assets/icons/icon-maskable-512.png`,`${basePath}assets/icons/apple-touch-icon.png`,
       ...foodImageCatalog.map(item=>`${basePath}assets/food/${item.file}.webp`),
       ...recipes.map(item=>`${basePath}assets/recipes/${item.image}.webp`)
     ];
-    const cache=await caches.open('fridge-pwa-v3');
+    const cache=await caches.open('fridge-pwa-v4');
     const results=await Promise.allSettled(assetUrls.map(url=>cache.add(url)));
     const failed=results.filter(result=>result.status==='rejected');
     if(failed.length)console.warn(`오프라인 파일 ${failed.length}개를 저장하지 못했습니다.`,failed);
