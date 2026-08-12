@@ -1,6 +1,6 @@
-const CACHE_NAME='fridge-pwa-v6';
+const CACHE_NAME='fridge-pwa-v17';
 const BASE_PATH='/fridge-at-a-glance/';
-const APP_SHELL=[BASE_PATH,`${BASE_PATH}index.html`,`${BASE_PATH}styles.css`,`${BASE_PATH}recipes.js`,`${BASE_PATH}app.js`,`${BASE_PATH}receipt.js`,`${BASE_PATH}manifest.webmanifest`,`${BASE_PATH}assets/hero-fridge-balanced.webp`,`${BASE_PATH}assets/icons/icon-192.png`,`${BASE_PATH}assets/icons/icon-512.png`,`${BASE_PATH}assets/icons/icon-maskable-512.png`,`${BASE_PATH}assets/icons/apple-touch-icon.png`];
+const APP_SHELL=[BASE_PATH,`${BASE_PATH}index.html`,`${BASE_PATH}styles.css`,`${BASE_PATH}recipes.js`,`${BASE_PATH}app.js`,`${BASE_PATH}manifest.webmanifest`,`${BASE_PATH}assets/hero-fridge-balanced.webp`,`${BASE_PATH}assets/icons/icon-192.png`,`${BASE_PATH}assets/icons/icon-512.png`,`${BASE_PATH}assets/icons/icon-maskable-512.png`,`${BASE_PATH}assets/icons/apple-touch-icon.png`];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()));

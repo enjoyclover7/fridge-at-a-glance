@@ -39,7 +39,7 @@
           <div class="hero-stats" aria-label="냉장고 요약 및 음식 필터">
             <button class="stat-tab active" type="button" data-stat-filter="all" aria-pressed="true"><span class="stat-icon leaf">♧</span><span class="stat-copy"><strong id="total-count">0</strong><small>보관 중</small></span></button>
             <button class="stat-tab" type="button" data-stat-filter="urgent" aria-pressed="false"><span class="stat-icon clock">◷</span><span class="stat-copy"><strong id="urgent-count">0</strong><small>곧 소비</small></span></button>
-            <button class="stat-tab" type="button" data-stat-filter="safe" aria-pressed="false"><span class="stat-icon sprout">⌁</span><span class="stat-copy"><strong id="safe-count">0</strong><small>신선함</small></span></button>
+            <button class="stat-tab" type="button" data-stat-filter="safe" aria-pressed="false"><span class="stat-icon sprout">⌁</span><span class="stat-copy"><strong id="safe-count">0</strong><small>여유</small></span></button>
             <button class="stat-tab" type="button" data-stat-target="recipes"><span class="stat-icon star">☆</span><span class="stat-copy"><strong id="recipe-count">0</strong><small>추천 메뉴</small></span></button>
           </div>
         </div>
@@ -55,13 +55,15 @@
             <div class="inventory-title"><div><p class="kicker">IN MY FRIDGE</p><h2>남은 음식</h2></div><button id="open-recipes" class="recipe-link" type="button" aria-haspopup="dialog" aria-controls="recipe-dialog">메뉴 추천 보기 <span>→</span></button></div>
             <div class="tools">
               <label class="search"><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="음식 검색" aria-label="음식 검색"></label>
-              <div class="filters" role="group" aria-label="기한 필터">
-                <button class="filter active" data-filter="all">전체</button>
-                <button class="filter" data-filter="urgent">임박</button>
-                <button class="filter" data-filter="safe">여유</button>
-              </div>
+              <select id="sort-select" class="sort-select" aria-label="음식 정렬">
+                <option value="expiry">소비기한 임박 순</option>
+                <option value="recent">최근 등록 순</option>
+                <option value="name">이름 순</option>
+                <option value="quantity">수량 많은 순</option>
+              </select>
             </div>
           </div>
+          <div id="edit-hint" class="edit-hint" hidden><span class="edit-pencil" aria-hidden="true"></span><span>음식 카드나 연필 표시를 누르면 정보를 수정할 수 있어요.</span><button id="dismiss-edit-hint" type="button" aria-label="수정 안내 닫기">×</button></div>
           <div id="food-list" class="food-list"></div>
           <div id="empty-state" class="empty-state" hidden><span>♧</span><h3>냉장고가 비어 있어요</h3><p>첫 음식을 등록하면 소비기한과 메뉴를 챙겨드릴게요.</p><button class="empty-add primary-btn" type="button" data-open-add>첫 음식 등록하기</button></div>
         </div>
@@ -77,7 +79,7 @@
       </section>
     </main>
 
-    <footer><div class="brand mini"><span class="leaf-logo" aria-hidden="true"><i></i></span><span>냉장고 한눈에</span></div><p>모든 데이터는 이 브라우저에만 안전하게 저장됩니다.</p></footer>
+    <footer><div class="brand mini"><span class="leaf-logo" aria-hidden="true"><i></i></span><span>냉장고 한눈에</span></div><p>음식 데이터는 이 기기에만 저장됩니다.</p><button id="open-settings" class="footer-settings" type="button">설정 · 백업</button></footer>
   </div>
   <dialog id="add-dialog" class="sheet" aria-labelledby="add-title">
     <div class="sheet-handle" aria-hidden="true"></div>
@@ -85,52 +87,54 @@
       <div><p class="kicker">ADD FOOD</p><h2 id="add-title">음식 등록</h2></div>
       <button class="icon-close" type="button" data-close-dialog aria-label="음식 등록 닫기">×</button>
     </header>
-    <div class="add-methods" role="tablist" aria-label="등록 방법">
-      <button id="manual-tab" class="method-tab active" type="button" role="tab" aria-selected="true" aria-controls="manual-panel">직접 등록</button>
-      <button id="receipt-tab" class="method-tab" type="button" role="tab" aria-selected="false" aria-controls="receipt-panel">영수증으로 가져오기</button>
-    </div>
-    <section id="manual-panel" class="method-panel" role="tabpanel" aria-labelledby="manual-tab">
+    <section id="manual-panel" class="method-panel">
       <form id="food-form" class="add-form sheet-form">
         <label><span>음식 이름</span><input id="food-name" type="text" maxlength="30" placeholder="예: 우유" required autocomplete="off"></label>
-        <label><span>소비기한</span><input id="expiry-date" type="date" required></label>
-        <button class="primary-btn" type="submit">냉장고에 추가</button>
+        <div id="food-clarify" class="food-clarify" hidden aria-live="polite"><strong id="clarify-title">어떤 음식인가요?</strong><div id="clarify-options"></div></div>
+        <div id="storage-suggestion" class="simple-recommendation" aria-live="polite" hidden><div><span>기본 추천</span><strong id="suggestion-title"></strong><small id="suggestion-copy"></small></div><button id="toggle-food-details" type="button" aria-expanded="false" aria-controls="food-details">변경</button></div>
+        <div id="food-details" class="food-details" hidden>
+          <div class="detail-expiry"><span>소비기한</span><div id="quick-expiry-buttons" class="detail-quick-dates"><button type="button" data-quick-days="7">7일</button><button type="button" data-quick-days="14">14일</button><button type="button" data-quick-days="30">한 달</button><button id="open-expiry-calendar" type="button">날짜 선택</button></div><input id="expiry-date" type="date" aria-label="소비기한 날짜" hidden></div>
+          <label><span>보관 장소</span><select id="food-location"><option value="fridge">냉장</option><option value="freezer">냉동</option><option value="room">실온</option></select></label>
+          <label><span>수량</span><input id="food-quantity" type="number" min="1" max="999" value="1" required inputmode="numeric"></label>
+          <label class="memo-field"><span>메모</span><textarea id="food-memo" maxlength="100" placeholder="예: 개봉함, 이유식용"></textarea></label>
+        </div>
+        <button id="submit-food" class="primary-btn" type="submit" disabled>등록하기</button>
       </form>
+      <p class="storage-notice">제품에 표시된 소비기한이 있으면 제품 표시를 우선하세요.</p>
       <div id="recent-wrap" class="recent-wrap" hidden><span>최근 등록</span><div id="recent-items" class="chips"></div></div>
     </section>
-    <section id="receipt-panel" class="method-panel" role="tabpanel" aria-labelledby="receipt-tab" hidden>
-      <div id="receipt-upload" class="receipt-upload">
-        <span class="receipt-icon" aria-hidden="true">▤</span>
-        <h3>영수증 사진을 올려주세요</h3>
-        <p>사진은 기기 안에서만 분석되며 서버로 전송하지 않습니다.</p>
-        <div class="upload-actions">
-          <label class="upload-btn">카메라로 촬영<input id="receipt-camera" class="receipt-file" type="file" accept="image/*" capture="environment"></label>
-          <label class="upload-btn secondary-upload">앨범에서 선택<input id="receipt-gallery" class="receipt-file" type="file" accept="image/*"></label>
-        </div>
-        <p class="network-note">처음 인식할 때 OCR 언어 파일을 내려받기 위해 인터넷이 필요합니다.</p>
-      </div>
-      <div id="receipt-progress" class="receipt-progress" hidden aria-live="polite">
-        <div class="spinner" aria-hidden="true"></div><strong id="ocr-status">영수증을 준비하고 있어요</strong>
-        <progress id="ocr-progress" max="100" value="0"></progress><button id="cancel-ocr" class="text-btn" type="button">취소</button>
-      </div>
-      <div id="receipt-review" class="receipt-review" hidden>
-        <div class="review-head"><div><h3>등록할 음식을 확인하세요</h3><p>상품명과 수량을 수정하고 소비기한을 입력해 주세요.</p></div><button id="retry-receipt" class="text-btn" type="button">다른 사진</button></div>
-        <div class="bulk-date"><label for="bulk-expiry">모든 선택 항목에 소비기한 적용</label><div><input id="bulk-expiry" type="date"><button id="apply-bulk-date" type="button">적용</button></div></div>
-        <div id="receipt-items" class="receipt-items"></div>
-        <details class="ocr-raw"><summary>인식된 원문 확인</summary><pre id="ocr-raw-text"></pre></details>
-        <button id="save-receipt-items" class="primary-btn review-save" type="button">선택한 음식 저장</button>
-      </div>
-      <div id="receipt-error" class="receipt-error" hidden role="alert"><strong>음식을 찾지 못했어요.</strong><p id="receipt-error-message">더 밝고 반듯하게 찍은 사진으로 다시 시도해 주세요.</p><button id="retry-error" class="secondary-btn" type="button">다시 시도</button></div>
-    </section>
+  </dialog>
+  <dialog id="edit-dialog" class="sheet compact-sheet" aria-labelledby="edit-title">
+    <header class="sheet-head"><div><p class="kicker">EDIT FOOD</p><h2 id="edit-title">음식 수정</h2></div><button class="icon-close" type="button" data-close-edit aria-label="음식 수정 닫기">×</button></header>
+    <form id="edit-form" class="edit-form method-panel">
+      <input id="edit-id" type="hidden">
+      <label><span>음식 이름</span><input id="edit-name" type="text" maxlength="30" required></label>
+      <label><span>소비기한</span><input id="edit-expiry" type="date" required></label>
+      <label><span>수량</span><input id="edit-quantity" type="number" min="1" max="999" required></label>
+      <label><span>보관 장소</span><select id="edit-location"><option value="fridge">냉장</option><option value="freezer">냉동</option><option value="room">실온</option></select></label>
+      <label class="memo-field"><span>메모</span><textarea id="edit-memo" maxlength="100" placeholder="메모 없음"></textarea></label>
+      <div class="form-actions"><button id="delete-food" class="danger-btn" type="button">삭제</button><button class="primary-btn" type="submit">수정 저장</button></div>
+    </form>
+  </dialog>
+  <dialog id="complete-dialog" class="sheet action-sheet" aria-labelledby="complete-title">
+    <header class="sheet-head"><div><p class="kicker">USE COMPLETE</p><h2 id="complete-title">사용 완료할까요?</h2></div><button class="icon-close" type="button" data-close-complete aria-label="사용 완료 닫기">×</button></header>
+    <div class="complete-body"><p><strong id="complete-food-name"></strong><span>보관 목록에서 제거합니다.</span></p><div class="complete-actions"><button id="cancel-complete" class="secondary-btn" type="button">취소</button><button id="confirm-complete" class="primary-btn" type="button">사용 완료</button></div></div>
+  </dialog>
+  <dialog id="settings-dialog" class="sheet compact-sheet" aria-labelledby="settings-title">
+    <header class="sheet-head"><div><p class="kicker">SETTINGS</p><h2 id="settings-title">설정 · 데이터 관리</h2></div><button class="icon-close" type="button" data-close-settings aria-label="설정 닫기">×</button></header>
+    <div class="settings-body method-panel">
+      <section><h3>내 데이터</h3><p>음식 정보는 계정이나 서버가 아닌 이 기기에만 저장됩니다. 앱을 삭제하거나 데이터를 초기화하면 복구되지 않을 수 있습니다.</p><p id="last-backup">아직 백업하지 않았어요.</p><div class="settings-actions"><button id="export-data" class="secondary-btn" type="button">백업 파일 내보내기</button><label class="secondary-btn import-label">백업 파일 불러오기<input id="import-data" type="file" accept="application/json,.json"></label></div></section>
+      <section><h3>임박 안내</h3><label class="setting-toggle"><span>앱을 열 때 임박 음식 안내</span><input id="expiry-reminder" type="checkbox" checked></label><p>앱이 종료된 상태의 예약 알림은 Android 앱 전환 단계에서 추가됩니다.</p></section>
+      <section><h3>앱 정보</h3><p>냉장고 한눈에 · 데이터 수집 없이 기기 내부에서 작동합니다.</p></section>
+    </div>
   </dialog>
   <dialog id="recipe-dialog" class="sheet recipe-sheet" aria-labelledby="recipe-dialog-title">
     <div class="sheet-handle" aria-hidden="true"></div>
     <header class="sheet-head"><div><p class="kicker">TODAY'S MENU</p><h2 id="recipe-dialog-title">메뉴 추천</h2></div><button class="icon-close" type="button" data-close-recipes aria-label="메뉴 추천 닫기">×</button></header>
-    <div class="recipe-dialog-body"><p class="recipe-intro">보유한 음식과 소비기한을 기준으로 가볍게 참고할 메뉴예요.</p><div id="dialog-menu-list" class="menu-list"></div></div>
+    <div class="recipe-dialog-body"><p class="recipe-intro">보유한 음식과 소비기한을 기준으로 가볍게 참고할 메뉴예요. <strong id="recipe-dialog-count"></strong></p><div id="dialog-menu-list" class="menu-list"></div></div>
   </dialog>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js" defer></script>
+  <div id="toast" class="toast" role="status" aria-live="polite"><span id="toast-message"></span><button id="toast-undo" type="button" hidden>되돌리기</button></div>
   <script src="recipes.js"></script>
   <script src="app.js"></script>
-  <script src="receipt.js"></script>
 </body>
 </html>
