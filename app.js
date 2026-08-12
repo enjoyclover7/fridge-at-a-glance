@@ -70,8 +70,8 @@ function render(){
   foodList.innerHTML=visible.map(item=>{const status=statusFor(daysLeft(item.expiry));return`<article class="food-card"><div class="food-symbol" aria-hidden="true">${foodVisual(item.name)}</div><div class="food-info"><h3>${escapeHtml(item.name)}</h3><div class="food-meta"><span class="status ${status.key}">${status.label}</span><span>${formatDate(item.expiry)}까지</span></div></div><div class="food-actions" aria-label="${escapeHtml(item.name)} 수량"><button class="qty-btn" data-action="minus" data-id="${item.id}" aria-label="수량 줄이기">−</button><strong>${item.quantity}</strong><button class="qty-btn" data-action="plus" data-id="${item.id}" aria-label="수량 늘리기">＋</button><button class="done-btn" data-action="done" data-id="${item.id}">사용 완료</button></div></article>`}).join('');
   emptyState.hidden=visible.length>0;updateSummary();renderMenus();renderHistory();
 }
-function updateSummary(){let urgent=0,safe=0;foods.forEach(item=>{const key=statusFor(daysLeft(item.expiry)).key;if(key==='urgent'||key==='expired')urgent++;else safe++});const readyMenus=possibleMenus().filter(menu=>menu.ready);$('#total-count').textContent=foods.length;$('#urgent-count').textContent=urgent;$('#safe-count').textContent=safe;$('#recipe-count').textContent=readyMenus.length}
-function renderMenus(){const menus=possibleMenus().slice(0,6);$('#menu-list').innerHTML=menus.length?menus.map(menu=>`<article class="menu-card"><div class="menu-photo"><img src="assets/recipes/${menu.image}.webp" alt="${escapeHtml(menu.name)}" loading="lazy"><span class="priority-pill ${menu.ready?'ready':'near'}">${menu.ready?(menu.priority<=2?'먼저 먹어요':'바로 만들어요'):`${escapeHtml(menu.missing[0])}만 있으면 돼요`}</span></div><div class="menu-body"><div class="menu-title-row"><h3>${escapeHtml(menu.name)}</h3><span>${menu.time}분</span></div><div class="ingredients">${menu.ingredients.join(' · ')}</div><p class="recipe">${escapeHtml(menu.recipe)}</p></div></article>`).join(''):`<div class="no-menu"><strong>추천할 메뉴를 찾지 못했어요.</strong>음식을 하나 이상 등록하면 보유 재료와 가까운 레시피를 찾아드릴게요.</div>`}
+function updateSummary(){let urgent=0,safe=0;foods.forEach(item=>{const key=statusFor(daysLeft(item.expiry)).key;if(key==='urgent'||key==='expired')urgent++;else safe++});const readyMenus=possibleMenus().filter(menu=>menu.ready);$('#total-count').textContent=foods.length;$('#mobile-total-count').textContent=foods.length;$('#urgent-count').textContent=urgent;$('#safe-count').textContent=safe;$('#recipe-count').textContent=readyMenus.length;const urgentNames=[...foods].sort((a,b)=>daysLeft(a.expiry)-daysLeft(b.expiry)).filter(item=>daysLeft(item.expiry)<=2).slice(0,2).map(item=>item.name);$('#mobile-overview-copy').textContent=urgentNames.length?`${urgentNames.join(' · ')} 먼저 확인해 보세요.`:foods.length?'아직 소비기한이 여유로워요.':'첫 음식을 등록해 보세요.'}
+function renderMenus(){const menus=possibleMenus().slice(0,6);const markup=menus.length?menus.map(menu=>`<article class="menu-card"><div class="menu-photo"><img src="assets/recipes/${menu.image}.webp" alt="${escapeHtml(menu.name)}" loading="lazy"><span class="priority-pill ${menu.ready?'ready':'near'}">${menu.ready?(menu.priority<=2?'먼저 먹어요':'바로 만들어요'):`${escapeHtml(menu.missing[0])}만 있으면 돼요`}</span></div><div class="menu-body"><div class="menu-title-row"><h3>${escapeHtml(menu.name)}</h3><span>${menu.time}분</span></div><div class="ingredients">${menu.ingredients.join(' · ')}</div><p class="recipe">${escapeHtml(menu.recipe)}</p></div></article>`).join(''):`<div class="no-menu"><strong>추천할 메뉴를 찾지 못했어요.</strong>음식을 하나 이상 등록하면 보유 재료와 가까운 레시피를 찾아드릴게요.</div>`;$('#menu-list').innerHTML=markup;$('#dialog-menu-list').innerHTML=markup}
 function updateHistory(name,expiry){let history=[];try{history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch{}history=history.filter(x=>normalize(x.name)!==normalize(name));history.unshift({name,shelfDays:Math.max(1,daysLeft(expiry))});localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(0,8)))}
 function renderHistory(){let history=[];try{history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch{}$('#recent-wrap').hidden=!history.length;$('#recent-items').innerHTML=history.map((x,i)=>`<button class="chip" data-history="${i}">${escapeHtml(x.name)}</button>`).join('')}
 function toast(message){const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),1800)}
@@ -108,6 +108,12 @@ addDialog.addEventListener('click',event=>{if(event.target===addDialog)closeAddD
 addDialog.addEventListener('close',()=>document.body.classList.remove('modal-open'));
 window.fridgeApp={addFoods,toast,closeAddDialog,dateKey,offset};
 
+const recipeDialog=$('#recipe-dialog');
+$('#open-recipes').addEventListener('click',()=>{if(!recipeDialog.open)recipeDialog.showModal();document.body.classList.add('modal-open')});
+document.querySelectorAll('[data-close-recipes]').forEach(button=>button.addEventListener('click',()=>recipeDialog.close()));
+recipeDialog.addEventListener('click',event=>{if(event.target===recipeDialog)recipeDialog.close()});
+recipeDialog.addEventListener('close',()=>document.body.classList.remove('modal-open'));
+
 async function enableOfflineMode(){
   if(!('serviceWorker'in navigator))return;
   try{
@@ -121,7 +127,7 @@ async function enableOfflineMode(){
       ...foodImageCatalog.map(item=>`${basePath}assets/food/${item.file}.webp`),
       ...recipes.map(item=>`${basePath}assets/recipes/${item.image}.webp`)
     ];
-    const cache=await caches.open('fridge-pwa-v4');
+    const cache=await caches.open('fridge-pwa-v5');
     const results=await Promise.allSettled(assetUrls.map(url=>cache.add(url)));
     const failed=results.filter(result=>result.status==='rejected');
     if(failed.length)console.warn(`오프라인 파일 ${failed.length}개를 저장하지 못했습니다.`,failed);

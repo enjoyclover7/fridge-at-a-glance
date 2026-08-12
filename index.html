@@ -28,6 +28,9 @@
     </header>
 
     <main id="top">
+      <section class="mobile-overview" aria-labelledby="mobile-overview-title">
+        <div><h1 id="mobile-overview-title"><span id="mobile-total-count">0</span>가지 음식이 있어요</h1><p id="mobile-overview-copy">냉장고 속 음식을 확인해 보세요.</p></div>
+      </section>
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy-wrap">
           <p class="kicker">FRESH FRIDGE</p>
@@ -49,7 +52,7 @@
       <section class="dashboard">
         <div id="inventory" class="inventory-panel">
           <div class="section-head">
-            <div><p class="kicker">IN MY FRIDGE</p><h2>남은 음식</h2></div>
+            <div class="inventory-title"><div><p class="kicker">IN MY FRIDGE</p><h2>남은 음식</h2></div><button id="open-recipes" class="recipe-link" type="button" aria-haspopup="dialog" aria-controls="recipe-dialog">메뉴 추천 보기 <span>→</span></button></div>
             <div class="tools">
               <label class="search"><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="음식 검색" aria-label="음식 검색"></label>
               <div class="filters" role="group" aria-label="기한 필터">
@@ -99,7 +102,10 @@
         <span class="receipt-icon" aria-hidden="true">▤</span>
         <h3>영수증 사진을 올려주세요</h3>
         <p>사진은 기기 안에서만 분석되며 서버로 전송하지 않습니다.</p>
-        <label class="upload-btn">사진 촬영 또는 선택<input id="receipt-file" type="file" accept="image/*" capture="environment"></label>
+        <div class="upload-actions">
+          <label class="upload-btn">카메라로 촬영<input id="receipt-camera" class="receipt-file" type="file" accept="image/*" capture="environment"></label>
+          <label class="upload-btn secondary-upload">앨범에서 선택<input id="receipt-gallery" class="receipt-file" type="file" accept="image/*"></label>
+        </div>
         <p class="network-note">처음 인식할 때 OCR 언어 파일을 내려받기 위해 인터넷이 필요합니다.</p>
       </div>
       <div id="receipt-progress" class="receipt-progress" hidden aria-live="polite">
@@ -115,6 +121,11 @@
       </div>
       <div id="receipt-error" class="receipt-error" hidden role="alert"><strong>음식을 찾지 못했어요.</strong><p id="receipt-error-message">더 밝고 반듯하게 찍은 사진으로 다시 시도해 주세요.</p><button id="retry-error" class="secondary-btn" type="button">다시 시도</button></div>
     </section>
+  </dialog>
+  <dialog id="recipe-dialog" class="sheet recipe-sheet" aria-labelledby="recipe-dialog-title">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <header class="sheet-head"><div><p class="kicker">TODAY'S MENU</p><h2 id="recipe-dialog-title">메뉴 추천</h2></div><button class="icon-close" type="button" data-close-recipes aria-label="메뉴 추천 닫기">×</button></header>
+    <div class="recipe-dialog-body"><p class="recipe-intro">보유한 음식과 소비기한을 기준으로 가볍게 참고할 메뉴예요.</p><div id="dialog-menu-list" class="menu-list"></div></div>
   </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js" defer></script>
