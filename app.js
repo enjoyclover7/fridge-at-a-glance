@@ -127,7 +127,7 @@ async function enableOfflineMode(){
       ...foodImageCatalog.map(item=>`${basePath}assets/food/${item.file}.webp`),
       ...recipes.map(item=>`${basePath}assets/recipes/${item.image}.webp`)
     ];
-    const cache=await caches.open('fridge-pwa-v5');
+    const cache=await caches.open('fridge-pwa-v6');
     const results=await Promise.allSettled(assetUrls.map(url=>cache.add(url)));
     const failed=results.filter(result=>result.status==='rejected');
     if(failed.length)console.warn(`오프라인 파일 ${failed.length}개를 저장하지 못했습니다.`,failed);

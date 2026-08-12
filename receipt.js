@@ -40,12 +40,12 @@
     text.split(/\r?\n/).forEach(raw=>{
       const line=raw.trim();if(line.length<2||excluded.test(line))return;
       if(/\b20\d{2}[./-]\d{1,2}[./-]\d{1,2}\b/.test(line))return;
-      const cleaned=cleanName(line),name=normalizedFoodName(cleaned);const korean=(name.match(/[가-힣]/g)||[]).length;
+      const cleaned=cleanName(line),recognized=canonicalFoods.some(([,pattern])=>pattern.test(cleaned)),name=normalizedFoodName(cleaned);const korean=(name.match(/[가-힣]/g)||[]).length;
       if(name.length<2||name.length>45||korean<2||/^\d/.test(name)&&korean<3)return;
       const hasPrice=/[\d,.]{3,}/.test(line),looksFood=foodHints.test(name);
       if(!looksFood&&!hasPrice)return;
       const key=name.replace(/\s/g,'').toLowerCase();
-      const suspicious=!looksFood&&(korean<4||name.length>24);
+      const suspicious=!recognized;
       if(!seen.has(key))seen.set(key,{name,quantity:quantityFrom(line),suspicious});
     });
     return [...seen.values()].slice(0,30);
@@ -59,6 +59,11 @@
     for(let i=0;i<data.length;i+=4){const gray=.299*data[i]+.587*data[i+1]+.114*data[i+2];const value=gray>205?255:gray<55?0:Math.max(0,Math.min(255,(gray-128)*1.7+128));data[i]=data[i+1]=data[i+2]=value;}
     context.putImageData(image,0,0);return canvas;
   }
+  function rotateCounterClockwise(source){
+    const rotated=document.createElement('canvas');rotated.width=source.height;rotated.height=source.width;
+    const context=rotated.getContext('2d');context.translate(0,rotated.height);context.rotate(-Math.PI/2);context.drawImage(source,0,0);return rotated;
+  }
+  function resultScore(items){return items.reduce((score,item)=>score+(item.suspicious?1:12),0)}
   function setStage(stage){upload.hidden=stage!=='upload';progress.hidden=stage!=='progress';review.hidden=stage!=='review';errorBox.hidden=stage!=='error'}
   function statusText(status){return({'loading tesseract core':'인식 엔진을 불러오는 중','initializing tesseract':'인식 엔진을 준비하는 중','loading language traineddata':'한국어를 배우는 중','initializing api':'문자 분석을 준비하는 중','recognizing text':'영수증 글자를 읽는 중'})[status]||'영수증을 분석하는 중'}
   function renderItems(items){
@@ -77,9 +82,14 @@
       worker=await Tesseract.createWorker('kor+eng',1,{logger:message=>{if(message.progress!=null)$('#ocr-progress').value=Math.round(message.progress*100);$('#ocr-status').textContent=statusText(message.status)}});
       if(cancelled){await worker.terminate();worker=null;return}
       await worker.setParameters({tessedit_pageseg_mode:Tesseract.PSM.SINGLE_BLOCK,preserve_interword_spaces:'1',user_defined_dpi:'300'});
-      const result=await worker.recognize(canvas);await worker.terminate();worker=null;if(cancelled)return;
-      const text=result.data.text||'',items=parseReceipt(text);$('#ocr-raw-text').textContent=text;
-      if(!items.length)throw new Error('상품명 후보를 찾지 못했습니다. 영수증 전체가 밝고 반듯하게 보이도록 다시 찍어 주세요.');
+      let result=await worker.recognize(canvas),text=result.data.text||'',items=parseReceipt(text);
+      if(!cancelled&&items.every(item=>item.suspicious)){
+        $('#ocr-status').textContent='사진 방향을 바꿔 다시 읽는 중';$('#ocr-progress').value=0;
+        const rotatedResult=await worker.recognize(rotateCounterClockwise(canvas)),rotatedText=rotatedResult.data.text||'',rotatedItems=parseReceipt(rotatedText);
+        if(resultScore(rotatedItems)>resultScore(items)){result=rotatedResult;text=rotatedText;items=rotatedItems}
+      }
+      await worker.terminate();worker=null;if(cancelled)return;$('#ocr-raw-text').textContent=text;
+      if(!items.some(item=>!item.suspicious))throw new Error('확실하게 읽힌 음식이 없어요. 영수증을 세로로 놓고 글자가 화면을 가득 채우도록 더 가까이 촬영해 주세요.');
       renderItems(items);setStage('review');
     }catch(error){if(cancelled)return;worker=null;$('#receipt-error-message').textContent=error.message||'사진을 분석하지 못했습니다.';setStage('error')}
   }
