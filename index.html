@@ -63,9 +63,15 @@
               </select>
             </div>
           </div>
+          <div class="location-filters" role="group" aria-label="보관 장소별 음식 보기">
+            <button class="location-filter active" type="button" data-location-filter="all" aria-pressed="true"><span>전체</span><strong id="location-all-count">0</strong></button>
+            <button class="location-filter" type="button" data-location-filter="fridge" aria-pressed="false"><span>냉장</span><strong id="location-fridge-count">0</strong></button>
+            <button class="location-filter" type="button" data-location-filter="freezer" aria-pressed="false"><span>냉동</span><strong id="location-freezer-count">0</strong></button>
+            <button class="location-filter" type="button" data-location-filter="room" aria-pressed="false"><span>실온</span><strong id="location-room-count">0</strong></button>
+          </div>
           <div id="edit-hint" class="edit-hint" hidden><span class="edit-pencil" aria-hidden="true"></span><span>음식 카드나 연필 표시를 누르면 정보를 수정할 수 있어요.</span><button id="dismiss-edit-hint" type="button" aria-label="수정 안내 닫기">×</button></div>
           <div id="food-list" class="food-list"></div>
-          <div id="empty-state" class="empty-state" hidden><span>♧</span><h3>냉장고가 비어 있어요</h3><p>첫 음식을 등록하면 소비기한과 메뉴를 챙겨드릴게요.</p><button class="empty-add primary-btn" type="button" data-open-add>첫 음식 등록하기</button></div>
+          <div id="empty-state" class="empty-state" hidden><span>♧</span><h3 id="empty-title">냉장고가 비어 있어요</h3><p id="empty-copy">첫 음식을 등록하면 소비기한과 메뉴를 챙겨드릴게요.</p><button class="empty-add primary-btn" type="button" data-open-add>첫 음식 등록하기</button></div>
         </div>
 
         <aside id="recipes" class="recipe-panel" aria-labelledby="recipe-title">
@@ -93,7 +99,7 @@
         <div id="food-clarify" class="food-clarify" hidden aria-live="polite"><strong id="clarify-title">어떤 음식인가요?</strong><div id="clarify-options"></div></div>
         <div id="storage-suggestion" class="simple-recommendation" aria-live="polite" hidden><div><span>기본 추천</span><strong id="suggestion-title"></strong><small id="suggestion-copy"></small></div><button id="toggle-food-details" type="button" aria-expanded="false" aria-controls="food-details">변경</button></div>
         <div id="food-details" class="food-details" hidden>
-          <div class="detail-expiry"><span>소비기한</span><div id="quick-expiry-buttons" class="detail-quick-dates"><button type="button" data-quick-days="7">7일</button><button type="button" data-quick-days="14">14일</button><button type="button" data-quick-days="30">한 달</button><button id="open-expiry-calendar" type="button">날짜 선택</button></div><input id="expiry-date" type="date" aria-label="소비기한 날짜" hidden></div>
+          <div class="detail-expiry"><span>소비기한</span><div id="quick-expiry-buttons" class="detail-quick-dates"><button type="button" data-quick-days="7">7일</button><button type="button" data-quick-days="14">14일</button><button type="button" data-quick-days="30">한 달</button><button type="button" data-quick-days="90">3개월</button><button id="open-expiry-calendar" type="button">날짜 선택</button></div><input id="expiry-date" type="date" aria-label="소비기한 날짜" hidden></div>
           <label><span>보관 장소</span><select id="food-location"><option value="fridge">냉장</option><option value="freezer">냉동</option><option value="room">실온</option></select></label>
           <label><span>수량</span><input id="food-quantity" type="number" min="1" max="999" value="1" required inputmode="numeric"></label>
           <label class="memo-field"><span>메모</span><textarea id="food-memo" maxlength="100" placeholder="예: 개봉함, 이유식용"></textarea></label>
