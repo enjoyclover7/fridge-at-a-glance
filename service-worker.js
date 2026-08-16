@@ -1,4 +1,4 @@
-const CACHE_NAME='fridge-pwa-v19';
+const CACHE_NAME='fridge-pwa-v20';
 const BASE_PATH='/fridge-at-a-glance/';
 const APP_SHELL=[BASE_PATH,`${BASE_PATH}index.html`,`${BASE_PATH}styles.css`,`${BASE_PATH}recipes.js`,`${BASE_PATH}app.js`,`${BASE_PATH}manifest.webmanifest`,`${BASE_PATH}assets/hero-fridge-balanced.webp`,`${BASE_PATH}assets/icons/icon-192.png`,`${BASE_PATH}assets/icons/icon-512.png`,`${BASE_PATH}assets/icons/icon-maskable-512.png`,`${BASE_PATH}assets/icons/apple-touch-icon.png`];
 

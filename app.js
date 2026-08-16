@@ -55,7 +55,7 @@ const $=s=>document.querySelector(s);
 const dateKey=date=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 const offset=days=>{const d=new Date();d.setDate(d.getDate()+days);return dateKey(d)};
 function loadFoods(){try{const parsed=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');if(!Array.isArray(parsed))return[];return parsed.filter(item=>item&&item.name&&item.expiry).map((item,index)=>({id:item.id||makeId(),name:String(item.name),expiry:item.expiry,quantity:Math.max(1,Number(item.quantity)||1),location:['fridge','freezer','room'].includes(item.location)?item.location:'fridge',memo:String(item.memo||''),createdAt:Number(item.createdAt)||Date.now()-index}))}catch{return[]}}
-let foods=loadFoods(),filter='all',locationFilter='all',search='',sortMode='expiry',undoAction=null;
+let foods=loadFoods(),filter='all',locationFilter='all',search='',undoAction=null;
 const foodList=$('#food-list'),emptyState=$('#empty-state');
 function daysLeft(value){const today=new Date();today.setHours(0,0,0,0);return Math.round((new Date(`${value}T00:00:00`)-today)/86400000)}
 function statusFor(days){if(days<0)return{key:'expired',label:`${Math.abs(days)}일 지남`};if(days===0)return{key:'urgent',label:'오늘까지'};if(days<=2)return{key:'urgent',label:`D-${days}`};if(days<=5)return{key:'warning',label:`D-${days}`};return{key:'safe',label:`D-${days}`}}
@@ -82,8 +82,7 @@ function addFoods(items){
   valid.forEach(item=>{const existing=foods.find(food=>normalize(food.name)===normalize(item.name)&&food.expiry===item.expiry&&food.location===item.location);if(existing)existing.quantity+=item.quantity;else foods.push(item);updateHistory(item.name,item.expiry,item.location)});save();return valid.length;
 }
 function render(){
-  const sorters={expiry:(a,b)=>daysLeft(a.expiry)-daysLeft(b.expiry),recent:(a,b)=>b.createdAt-a.createdAt,name:(a,b)=>a.name.localeCompare(b.name,'ko'),quantity:(a,b)=>b.quantity-a.quantity};
-  const sorted=[...foods].sort(sorters[sortMode]||sorters.expiry);
+  const sorted=[...foods].sort((a,b)=>daysLeft(a.expiry)-daysLeft(b.expiry));
   const visible=sorted.filter(item=>{const key=statusFor(daysLeft(item.expiry)).key;const matchFilter=filter==='all'||(filter==='urgent'&&(key==='urgent'||key==='expired'))||(filter==='safe'&&(key==='safe'||key==='warning'));const matchLocation=locationFilter==='all'||item.location===locationFilter;return matchFilter&&matchLocation&&item.name.toLowerCase().includes(search.toLowerCase())});
   const locationLabel={fridge:'냉장',freezer:'냉동',room:'실온'};
   foodList.innerHTML=visible.map(item=>{const status=statusFor(daysLeft(item.expiry));return`<article class="food-card"><button class="food-main" data-action="edit" data-id="${item.id}" aria-label="${escapeHtml(item.name)} 정보 수정"><span class="food-symbol" aria-hidden="true">${foodVisual(item.name)}</span><span class="food-info"><strong>${escapeHtml(item.name)}</strong><span class="food-meta"><span class="status ${status.key}">${status.label}</span><span>${formatDate(item.expiry)}까지</span><span>${locationLabel[item.location]}</span></span></span><span class="edit-pencil" aria-hidden="true"></span></button><div class="food-actions" aria-label="${escapeHtml(item.name)} 수량"><button class="qty-btn" data-action="minus" data-id="${item.id}" aria-label="수량 줄이기">−</button><strong>${item.quantity}</strong><button class="qty-btn" data-action="plus" data-id="${item.id}" aria-label="수량 늘리기">＋</button><button class="done-btn" data-action="done" data-id="${item.id}">사용 완료</button></div></article>`}).join('');
@@ -114,7 +113,7 @@ $('#food-form').addEventListener('submit',event=>{event.preventDefault();const n
 foodList.addEventListener('click',event=>{const button=event.target.closest('button[data-action]');if(!button)return;const item=foods.find(x=>x.id===button.dataset.id);if(!item)return;if(button.dataset.action==='edit'){openEdit(item);return}if(button.dataset.action==='plus')item.quantity++;if(button.dataset.action==='minus')item.quantity=Math.max(1,item.quantity-1);if(button.dataset.action==='done'){openCompleteDialog(item);return}save()});
 $('#recent-items').addEventListener('click',event=>{const button=event.target.closest('[data-history]');if(!button)return;const history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'),item=history[Number(button.dataset.history)];if(!item)return;$('#food-name').value=item.name;updateStorageSuggestion();$('#food-name').focus()});
 $('#search-input').addEventListener('input',e=>{search=e.target.value;render()});
-$('#sort-select').addEventListener('change',e=>{sortMode=e.target.value;render()});
+$('#toggle-search').addEventListener('click',()=>{const panel=$('#search-panel'),open=panel.hidden;panel.hidden=!open;$('#toggle-search').setAttribute('aria-expanded',String(open));$('#toggle-search').classList.toggle('active',open);if(open){$('#search-input').focus();return}$('#search-input').value='';search='';render()});
 document.querySelectorAll('[data-location-filter]').forEach(button=>button.addEventListener('click',()=>{
   locationFilter=button.dataset.locationFilter;
   document.querySelectorAll('[data-location-filter]').forEach(item=>{const active=item.dataset.locationFilter===locationFilter;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});
