@@ -4,12 +4,12 @@ const makeId=()=>globalThis.crypto&&typeof crypto.randomUUID==='function'?crypto
 
 const foodImageCatalog=[
   ['apple','사과,홍옥,아오리,부사'],['banana','바나나'],['strawberry','딸기'],['orange','오렌지,귤,한라봉,천혜향,레드향'],['grapes','포도,샤인머스캣,청포도'],
-  ['watermelon','수박'],['pear','배'],['peach','복숭아,천도복숭아'],['kiwi','키위'],['lemon','레몬'],
-  ['tomato','토마토,방울토마토,대추토마토'],['cucumber','오이,백오이,가시오이'],['carrot','당근'],['potato','감자,알감자'],['onion','양파,적양파'],
+  ['watermelon','수박'],['pear','배'],['peach','복숭아,천도복숭아'],['kiwi','키위'],['lemon','레몬'],['avocado','아보카도'],
+  ['tomato','토마토,방울토마토,대추토마토'],['cucumber','오이,백오이,가시오이'],['eggplant','가지'],['carrot','당근'],['potato','감자,알감자'],['onion','양파,적양파'],
   ['garlic','마늘'],['bell-pepper','피망,파프리카'],['broccoli','브로콜리'],['cabbage','양배추'],['napa-cabbage','배추,알배추'],
-  ['lettuce','양상추,상추'],['spinach','시금치'],['green-onion','대파,쪽파,실파'],['mushroom','버섯,표고버섯,새송이버섯,팽이버섯'],['zucchini','애호박,주키니,호박'],
+  ['lettuce','양상추,상추'],['spinach','시금치'],['green-onion','대파,쪽파,실파'],['mushroom','버섯,표고버섯,새송이버섯,팽이버섯'],['zucchini','애호박,주키니'],['old-pumpkin','늙은호박,맷돌호박'],['kabocha','단호박,미니단호박'],['mung-bean-sprouts','숙주,숙주나물'],
   ['egg','계란,달걀,훈제란,구운란'],['milk','우유,멸균우유,저지방우유'],['tofu','두부,찌개두부,부침두부'],['chicken-breast','닭가슴살,닭고기,닭안심,닭다리,닭봉'],['beef','소고기,쇠고기,스테이크,불고기용소고기'],['fresh-tuna','참치,생참치,참치회,참치스테이크'],
-  ['pork-belly','삼겹살,돼지고기,목살'],['salmon','연어'],['mackerel','고등어'],['shrimp','새우,대하'],['tuna-can','참치캔,캔참치'],
+  ['pork-belly','삼겹살,돼지고기,목살'],['salmon','연어'],['mackerel','고등어'],['eel','장어,민물장어,바다장어,붕장어,아나고'],['yellow-croaker','조기,참조기,굴비,부세'],['shrimp','새우,대하'],['tuna-can','참치캔,캔참치'],
   ['ham','햄,슬라이스햄'],['sausage','소시지,비엔나,후랑크'],['bacon','베이컨'],['cheese','치즈,모짜렐라,체다치즈'],['yogurt','요거트,요구르트,그릭요거트'],
   ['butter','버터'],['rice','밥,백미밥'],['bread','식빵,빵'],['bagel','베이글'],['flour','밀가루,부침가루'],
   ['pasta','파스타면,스파게티면,마카로니'],['ramen-noodles','라면사리,면사리,소면,국수면,우동면,칼국수면'],['rice-cake','떡,떡국떡,가래떡'],['dumpling','만두,김치만두,고기만두'],['fish-cake','어묵,오뎅'],
@@ -27,24 +27,25 @@ const foodImageCatalog=[
 ].map(([file,aliases])=>({file,aliases:aliases.split(',').map(alias=>alias.replace(/\s/g,'').toLowerCase())}));
 const foodImageAliases=foodImageCatalog.flatMap(item=>item.aliases.map(alias=>({alias,file:item.file}))).sort((a,b)=>b.alias.length-a.alias.length);
 const ambiguousFoods={
-  '참치':[{name:'참치캔',description:'통조림',location:'room',days:90},{name:'생참치',description:'회·스테이크용',location:'fridge',days:1},{name:'참치마요',description:'조리된 음식',location:'fridge',days:3}]
+  '참치':[{name:'참치캔',description:'통조림',location:'room',days:90},{name:'생참치',description:'회·스테이크용',location:'fridge',days:1},{name:'참치마요',description:'조리된 음식',location:'fridge',days:3}],
+  '호박':[{name:'애호박',description:'길쭉한 연두색',location:'fridge',days:7},{name:'늙은호박',description:'크고 황갈색',location:'room',days:14},{name:'단호박',description:'작고 짙은 초록색',location:'room',days:14}]
 };
 const ambiguousImageAliases=new Set(Object.keys(ambiguousFoods).map(normalize));
 
 // 일반적인 가정 보관 환경에서 다시 상태를 확인하도록 돕는 보수적인 제안값입니다.
 // 제품 포장에 표시된 소비기한과 보관방법이 있으면 항상 제품 표시를 우선합니다.
 const storageGuide=[
-  {names:'두부,순두부',options:[['fridge',2]]},{names:'생선,고등어,연어,새우,조개',options:[['fridge',2],['freezer',30]]},
+  {names:'두부,순두부',options:[['fridge',2]]},{names:'생선,고등어,연어,장어,조기,굴비,새우,조개',options:[['fridge',2],['freezer',30]]},
   {names:'닭고기,닭가슴살,돼지고기,삼겹살,다짐육',options:[['fridge',2],['freezer',30]]},{names:'소고기,스테이크',options:[['fridge',5],['freezer',90]]},
   {names:'반찬,찌개,국,카레,볶음밥,남은음식',options:[['fridge',4],['freezer',60]]},{names:'계란,달걀',options:[['fridge',14]]},
   {names:'우유,요거트,요구르트',options:[['fridge',7]]},{names:'햄,소시지,베이컨,맛살,어묵',options:[['fridge',7],['freezer',30]]},
-  {names:'상추,양상추,시금치,오이,브로콜리,버섯,애호박,대파',options:[['fridge',7]]},{names:'토마토,파프리카,당근,양배추,배추',options:[['fridge',14]]},
-  {names:'사과,배,오렌지,귤,포도,키위,레몬',options:[['fridge',21]]},{names:'딸기,복숭아',options:[['fridge',5]]},{names:'바나나',options:[['room',5]]},
+  {names:'상추,양상추,시금치,오이,가지,브로콜리,버섯,애호박,대파',options:[['fridge',7]]},{names:'토마토,파프리카,당근,양배추,배추',options:[['fridge',14]]},
+  {names:'사과,배,오렌지,귤,포도,키위,레몬',options:[['fridge',21]]},{names:'딸기,복숭아,아보카도',options:[['fridge',5]]},{names:'바나나',options:[['room',5]]},
   {names:'감자,양파,마늘',options:[['room',30]]},{names:'식빵,빵,베이글',options:[['room',5],['freezer',30]]},
   {names:'김치,깍두기',options:[['fridge',30]]},{names:'냉동만두,냉동피자,냉동채소,돈까스,너겟',options:[['freezer',90]]},
   {names:'아이스크림,아이스바,빙과,젤라또,샤베트',options:[['freezer',90]]},{names:'참치캔,캔참치,참치통조림',options:[['room',90]]},{names:'생참치,참치회,참치스테이크',options:[['fridge',1],['freezer',30]]},{names:'참치마요',options:[['fridge',3]]},
   {names:'냉동밥,냉동볶음밥,감자튀김,냉동핫도그',options:[['freezer',90]]},
-  {names:'콩나물,숙주',options:[['fridge',3]]},{names:'깻잎,미나리,부추',options:[['fridge',5]]},{names:'옥수수,고구마,단호박',options:[['room',14]]},
+  {names:'콩나물,숙주',options:[['fridge',3]]},{names:'깻잎,미나리,부추',options:[['fridge',5]]},{names:'옥수수,고구마,늙은호박,단호박',options:[['room',14]]},
   {names:'수박,참외,멜론',options:[['fridge',7]]},{names:'블루베리,라즈베리,체리',options:[['fridge',5]]},
   {names:'생크림,휘핑크림,크림치즈',options:[['fridge',5]]},{names:'개봉햄,개봉소시지,개봉치즈',options:[['fridge',5]]},
   {names:'쌀,밀가루,설탕,소금,라면,파스타면,통조림',options:[['room',90]]}
@@ -211,7 +212,7 @@ async function enableOfflineMode(){
       ...foodImageCatalog.map(item=>`${basePath}assets/food/${item.file}.webp`),
       ...recipes.map(item=>`${basePath}assets/recipes/${item.image}.webp`)
     ];
-    const cache=await caches.open('fridge-pwa-v17');
+    const cache=await caches.open('fridge-pwa-v21');
     const results=await Promise.allSettled(assetUrls.map(url=>cache.add(url)));
     const failed=results.filter(result=>result.status==='rejected');
     if(failed.length)console.warn(`오프라인 파일 ${failed.length}개를 저장하지 못했습니다.`,failed);
